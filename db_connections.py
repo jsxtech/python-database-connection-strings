@@ -1,6 +1,8 @@
 """
 Python Database Connection Strings - Reference Guide
 Author: Jaspal | Contact: 9891156880 | jsxtech@gmail.com
+Last Updated: 2026-07-11
+Version: 2.0
 
 IMPORTANT: This is a reference guide only - not meant to be executed as-is.
 Copy the relevant connection code for your specific database.
@@ -33,12 +35,15 @@ conn = sqlite3.connect(":memory:")  # In-memory database
 
 # --- SQL Server ---
 import pyodbc
-conn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=dbname;UID=user;PWD=password")
+conn = pyodbc.connect("DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=dbname;UID=user;PWD=password;TrustServerCertificate=yes")
 conn = pyodbc.connect("DRIVER={SQL Server};SERVER=localhost;DATABASE=dbname;Trusted_Connection=yes")  # Windows Auth
 
 # --- Oracle ---
-import cx_Oracle
-conn = cx_Oracle.connect("user/password@localhost:1521/service_name")
+# python-oracledb (successor to cx_Oracle): pip install oracledb
+import oracledb
+conn = oracledb.connect(user="user", password="password", dsn="localhost:1521/service_name")
+# Thin mode (no Oracle Client needed) is the default. For Thick mode:
+# oracledb.init_oracle_client()
 
 # --- IBM Db2 ---
 import ibm_db
@@ -49,8 +54,9 @@ from hdbcli import dbapi
 conn = dbapi.connect(address='localhost', port=30015, user='user', password='password')
 
 # --- Teradata ---
-import teradata
-conn = teradata.connect(host='localhost', user='user', password='password')
+# pip install teradatasql
+import teradatasql
+conn = teradatasql.connect(host='localhost', user='user', password='password', database='dbname')
 
 # --- Vertica ---
 import vertica_python
@@ -64,13 +70,10 @@ conn = pyodbc.connect("DRIVER={IBM INFORMIX ODBC DRIVER};SERVER=localhost;DATABA
 import pyodbc
 conn = pyodbc.connect("DRIVER={Adaptive Server Enterprise};SERVER=localhost;PORT=5000;DATABASE=dbname;UID=user;PWD=password")
 
-# --- Greenplum ---
+# --- Greenplum (includes Pivotal Greenplum) ---
 import psycopg2
 conn = psycopg2.connect("postgresql://user:password@localhost:5432/greenplum_db")
-
-# --- Pivotal Greenplum ---
-import psycopg2
-conn = psycopg2.connect("postgresql://gpadmin:password@localhost:5432/gpadmin")
+conn = psycopg2.connect("postgresql://gpadmin:password@localhost:5432/gpadmin")  # Default admin
 
 # --- Netezza ---
 import pyodbc
@@ -85,6 +88,8 @@ import pymonetdb
 conn = pymonetdb.connect(hostname='localhost', port=50000, username='monetdb', password='monetdb', database='dbname')
 
 # --- Firebird ---
+# Note: The 'fdb' package is for Firebird. Do not confuse with FoundationDB's 'fdb'.
+# For Firebird 4+, use firebird-driver: pip install firebird-driver
 import fdb
 conn = fdb.connect(host='localhost', database='/path/to/database.fdb', user='SYSDBA', password='masterkey')
 
@@ -156,6 +161,7 @@ from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 auth = PlainTextAuthProvider(username='user', password='password')
 cluster = Cluster(['localhost'], auth_provider=auth)
+session = cluster.connect('keyspace')
 
 # --- ScyllaDB (Cassandra compatible) ---
 from cassandra.cluster import Cluster
@@ -170,6 +176,8 @@ server = couchdb.Server("http://user:password@localhost:5984/")
 from couchbase.cluster import Cluster
 from couchbase.auth import PasswordAuthenticator
 cluster = Cluster('couchbase://localhost', authenticator=PasswordAuthenticator('user', 'password'))
+bucket = cluster.bucket('bucket_name')
+collection = bucket.default_collection()
 
 # --- RethinkDB ---
 import rethinkdb as r
@@ -204,18 +212,27 @@ from voldemort.client import StoreClient
 client = StoreClient('store_name', [('localhost', 6666)])
 
 # --- Datomic ---
+# Datomic uses a REST API (Peer Server) - no native Python driver
 import requests
-conn = requests.post('http://localhost:8998/data/dbname/')
+response = requests.post('http://localhost:8998/data/dbname/')
 
-# --- FaunaDB ---
-from faunadb import query as q
-from faunadb.client import FaunaClient
-client = FaunaClient(secret="secret_key")
+# --- FaunaDB (DEPRECATED - use Fauna v10 below) ---
+# The faunadb package (v4) is deprecated. See "Fauna (v10)" in Specialized section.
+# from faunadb import query as q
+# from faunadb.client import FaunaClient
+# client = FaunaClient(secret="secret_key")
 
 # --- SurrealDB ---
+import asyncio
 from surrealdb import Surreal
-db = Surreal('ws://localhost:8000/rpc')
-db.signin({'user': 'root', 'pass': 'root'})
+
+async def connect_surrealdb():
+    db = Surreal("ws://localhost:8000/rpc")
+    await db.connect()
+    await db.signin({"user": "root", "pass": "root"})
+    await db.use("namespace", "database")
+    return db
+# db = asyncio.run(connect_surrealdb())
 
 # --- EdgeDB ---
 import edgedb
@@ -242,6 +259,89 @@ client = pydgraph.DgraphClient(client_stub)
 # --- Amazon Neptune (Gremlin) ---
 from gremlin_python.driver import client
 gremlin_client = client.Client('wss://cluster.region.neptune.amazonaws.com:8182/gremlin', 'g')
+
+# --- Memgraph ---
+from neo4j import GraphDatabase
+driver = GraphDatabase.driver("bolt://localhost:7687", auth=("user", "password"))
+
+# --- NebulaGraph ---
+from nebula3.gclient.net import ConnectionPool
+from nebula3.Config import Config
+config = Config()
+connection_pool = ConnectionPool()
+connection_pool.init([('localhost', 9669)], config)
+session = connection_pool.get_session('user', 'password')
+
+# --- JanusGraph ---
+from gremlin_python.driver import client
+gremlin_client = client.Client('ws://localhost:8182/gremlin', 'g')
+
+# --- TigerGraph ---
+import pyTigerGraph as tg
+conn = tg.TigerGraphConnection(host="localhost", graphname="MyGraph", username="user", password="password")
+
+# --- Apache AGE (PostgreSQL extension) ---
+import psycopg2
+conn = psycopg2.connect("postgresql://user:password@localhost:5432/postgres")
+cur = conn.cursor()
+cur.execute("LOAD 'age';")
+cur.execute("SET search_path = ag_catalog, '$user', public;")
+# Run Cypher queries:
+# cur.execute("SELECT * FROM cypher('graph_name', $$ MATCH (n) RETURN n $$) as (v agtype);")
+
+# --- RedisGraph (DEPRECATED - use FalkorDB instead) ---
+# RedisGraph was deprecated by Redis in 2023. FalkorDB is its maintained fork.
+# pip install FalkorDB
+from falkordb import FalkorDB
+db = FalkorDB(host='localhost', port=6379)
+graph = db.select_graph('social')
+
+# --- FalkorDB ---
+# pip install FalkorDB
+from falkordb import FalkorDB
+db = FalkorDB(host='localhost', port=6379)
+graph = db.select_graph('social')
+
+# --- Cayley ---
+import requests
+response = requests.post('http://localhost:64210/api/v2/query', json={'query': 'g.V().All()'})
+
+# --- StarDog ---
+import requests
+from requests.auth import HTTPBasicAuth
+response = requests.post('http://localhost:5820/mydb/query', auth=HTTPBasicAuth('admin', 'admin'), data={'query': 'SELECT * WHERE {?s ?p ?o}'})
+
+# --- AllegroGraph ---
+from franz.openrdf.sail.allegrographserver import AllegroGraphServer
+server = AllegroGraphServer('localhost', port=10035, user='user', password='password')
+
+# --- Blazegraph ---
+import requests
+response = requests.post('http://localhost:9999/blazegraph/sparql', data={'query': 'SELECT * WHERE {?s ?p ?o}'})
+
+# --- Apache Jena Fuseki ---
+from SPARQLWrapper import SPARQLWrapper
+sparql = SPARQLWrapper("http://localhost:3030/dataset/query")
+
+# --- GraphDB (Ontotext) ---
+from SPARQLWrapper import SPARQLWrapper
+sparql = SPARQLWrapper("http://localhost:7200/repositories/repo")
+
+# --- Titan ---
+from gremlin_python.driver import client
+gremlin_client = client.Client('ws://localhost:8182/gremlin', 'g')
+
+# --- HyperGraphDB ---
+import jpype
+jpype.startJVM(classpath=['hypergraphdb.jar'])
+
+# --- Grakn (TypeDB) ---
+from typedb.client import TypeDB
+client = TypeDB.core_client('localhost:1729')
+
+# --- TerminusDB ---
+from terminusdb_client import WOQLClient
+client = WOQLClient("http://localhost:6363")
 
 
 # ============================================================================
@@ -291,15 +391,19 @@ import whitedb
 db = whitedb.attach_database('1000')
 
 # --- FoundationDB ---
-import fdb
-fdb.api_version(710)
-db = fdb.open()
+# Note: FoundationDB's package is also named 'fdb' - do not confuse with the Firebird 'fdb' package
+# Install: pip install foundationdb
+import fdb as foundationdb
+foundationdb.api_version(710)
+db = foundationdb.open()
 
 # --- Hazelcast ---
 import hazelcast
 client = hazelcast.HazelcastClient(cluster_members=['localhost:5701'])
 
 # --- Apache Geode ---
+# Note: GemFire (in Specialized section) is the commercial version of Apache Geode.
+# Both use the same gemfire Python client.
 import gemfire
 cache = gemfire.CacheFactory().create()
 
@@ -319,12 +423,16 @@ client.connect('localhost', 10800)
 # ============================================================================
 
 # --- Pinecone ---
-import pinecone
-pinecone.init(api_key='api_key', environment='environment')
+from pinecone import Pinecone
+pc = Pinecone(api_key='api_key')
+index = pc.Index('index_name')
 
 # --- Weaviate ---
 import weaviate
-client = weaviate.Client(url='http://localhost:8080', auth_client_secret=weaviate.AuthApiKey('api_key'))
+from weaviate.auth import AuthApiKey
+client = weaviate.connect_to_local()  # localhost:8080
+# Or with authentication:
+# client = weaviate.connect_to_weaviate_cloud(cluster_url='https://cluster.weaviate.network', auth_credentials=AuthApiKey('api_key'))
 
 # --- Milvus ---
 from pymilvus import connections
@@ -430,11 +538,13 @@ conn = hive.Connection(host='localhost', port=10000, username='user', database='
 from impala.dbapi import connect
 conn = connect(host='localhost', port=21050, database='default')
 
-# --- Presto/Trino ---
-from pyhive import presto
-conn = presto.Connection(host='localhost', port=8080, username='user', catalog='catalog', schema='schema')
+# --- Trino (formerly Presto) ---
+# pip install trino
+from trino.dbapi import connect
+conn = connect(host='localhost', port=8080, user='user', catalog='catalog', schema='schema')
 
-# --- Presto (prestodb) ---
+# --- Presto (legacy - prestodb) ---
+# For original PrestoDB (not Trino)
 import prestodb
 conn = prestodb.dbapi.connect(host='localhost', port=8080, user='user', catalog='hive', schema='default')
 
@@ -459,12 +569,18 @@ import snowflake.connector
 conn = snowflake.connector.connect(user='user', password='password', account='account', warehouse='warehouse', database='dbname', schema='schema')
 
 # --- Databricks ---
+# Option 1: Databricks SQL Connector (recommended for SQL warehouses)
+# pip install databricks-sql-connector
+from databricks import sql
+conn = sql.connect(server_hostname='workspace.cloud.databricks.com', http_path='/sql/1.0/warehouses/warehouse_id', access_token='token')
+
+# Option 2: PySpark (for Spark clusters)
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.appName('app').config('spark.databricks.service.address', 'https://workspace.cloud.databricks.com').config('spark.databricks.service.token', 'token').getOrCreate()
 
-# --- Rockset ---
-from rockset import Client
-client = Client(api_key='api_key', api_server='https://api.rs2.usw2.rockset.com')
+# --- Rockset (DISCONTINUED - service shut down in 2024 after OpenAI acquisition) ---
+# from rockset import Client
+# client = Client(api_key='api_key', api_server='https://api.rs2.usw2.rockset.com')
 
 # --- Dremio ---
 import pyodbc
@@ -481,27 +597,30 @@ conn = jaydebeapi.connect('com.splicemachine.db.jdbc.ClientDriver', 'jdbc:splice
 
 # --- Amazon RDS (PostgreSQL) ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@instance.region.rds.amazonaws.com:5432/dbname")
+conn = psycopg2.connect("postgresql://user:password@instance.region.rds.amazonaws.com:5432/dbname?sslmode=require")
 
 # --- Amazon RDS (MySQL) ---
 import mysql.connector
-conn = mysql.connector.connect(host='instance.region.rds.amazonaws.com', user='user', password='password', database='dbname')
+conn = mysql.connector.connect(host='instance.region.rds.amazonaws.com', user='user', password='password', database='dbname', ssl_ca='/path/to/rds-combined-ca-bundle.pem')
 
 # --- Amazon Aurora (PostgreSQL) ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@cluster.region.rds.amazonaws.com:5432/dbname")
+conn = psycopg2.connect("postgresql://user:password@cluster.region.rds.amazonaws.com:5432/dbname?sslmode=require")
 
 # --- Amazon Aurora (MySQL) ---
 import mysql.connector
-conn = mysql.connector.connect(host='cluster.region.rds.amazonaws.com', user='user', password='password', database='dbname')
+conn = mysql.connector.connect(host='cluster.region.rds.amazonaws.com', user='user', password='password', database='dbname', ssl_ca='/path/to/rds-combined-ca-bundle.pem')
 
 # --- Amazon Redshift ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@cluster.region.redshift.amazonaws.com:5439/dbname")
+conn = psycopg2.connect("postgresql://user:password@cluster.region.redshift.amazonaws.com:5439/dbname?sslmode=require")
 
 # --- Amazon DynamoDB ---
 import boto3
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1', aws_access_key_id='key', aws_secret_access_key='secret')
+# Uses default credential chain (env vars, ~/.aws/credentials, IAM role, etc.)
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+# For explicit credentials (not recommended - use IAM roles or env vars):
+# dynamodb = boto3.resource('dynamodb', region_name='us-east-1', aws_access_key_id='key', aws_secret_access_key='secret')
 
 # --- Amazon DocumentDB (MongoDB compatible) ---
 from pymongo import MongoClient
@@ -514,7 +633,7 @@ client = MongoClient("mongodb://user:password@cluster.region.docdb.amazonaws.com
 
 # --- Azure SQL Database ---
 import pyodbc
-conn = pyodbc.connect("DRIVER={ODBC Driver 17 for SQL Server};SERVER=server.database.windows.net;DATABASE=dbname;UID=user;PWD=password")
+conn = pyodbc.connect("DRIVER={ODBC Driver 18 for SQL Server};SERVER=server.database.windows.net;DATABASE=dbname;UID=user;PWD=password;Encrypt=yes")
 
 # --- Azure Cosmos DB (MongoDB API) ---
 from pymongo import MongoClient
@@ -548,7 +667,7 @@ db = firestore.Client(project='project-id')
 
 # --- Supabase (PostgreSQL) ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@db.project.supabase.co:5432/postgres")
+conn = psycopg2.connect("postgresql://user:password@db.project.supabase.co:5432/postgres?sslmode=require")
 
 # --- PlanetScale (MySQL) ---
 import mysql.connector
@@ -596,7 +715,10 @@ conn = psycopg2.connect("postgresql://user:password@localhost:5432/postgres")
 
 # --- Databend ---
 import mysql.connector
+# Self-hosted
 conn = mysql.connector.connect(host='localhost', port=3307, user='root', password='', database='default')
+# Databend Cloud
+conn = mysql.connector.connect(host='tenant.databend.com', port=443, user='user', password='password', database='default', ssl_disabled=False)
 
 
 # ============================================================================
@@ -734,88 +856,6 @@ conn = pyodbc.connect("DSN=SadasDSN;UID=user;PWD=password")
 import polyglot
 context = polyglot.eval(language='js', string='({connect: function() {}})')
 
-# --- Apache Solr ---
-import pysolr
-solr = pysolr.Solr('http://localhost:8983/solr/collection', always_commit=True)
-
-# --- Memgraph ---
-from neo4j import GraphDatabase
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=("user", "password"))
-
-# --- NebulaGraph ---
-from nebula3.gclient.net import ConnectionPool
-from nebula3.Config import Config
-config = Config()
-connection_pool = ConnectionPool()
-connection_pool.init([('localhost', 9669)], config)
-
-# --- JanusGraph ---
-from gremlin_python.driver import client
-gremlin_client = client.Client('ws://localhost:8182/gremlin', 'g')
-
-# --- TigerGraph ---
-import pyTigerGraph as tg
-conn = tg.TigerGraphConnection(host="localhost", graphname="MyGraph", username="user", password="password")
-
-# --- Apache AGE (PostgreSQL extension) ---
-import psycopg2
-conn = psycopg2.connect("postgresql://user:password@localhost:5432/postgres")
-
-# --- RedisGraph ---
-from redisgraph import Graph
-graph = Graph('social', redis.Redis(host='localhost', port=6379))
-
-# --- Cayley ---
-import requests
-response = requests.post('http://localhost:64210/api/v2/query', json={'query': 'g.V().All()'})
-
-# --- StarDog ---
-import requests
-from requests.auth import HTTPBasicAuth
-response = requests.post('http://localhost:5820/mydb/query', auth=HTTPBasicAuth('admin', 'admin'), data={'query': 'SELECT * WHERE {?s ?p ?o}'})
-
-# --- AllegroGraph ---
-from franz.openrdf.sail.allegrographserver import AllegroGraphServer
-server = AllegroGraphServer('localhost', port=10035, user='user', password='password')
-
-# --- Blazegraph ---
-import requests
-response = requests.post('http://localhost:9999/blazegraph/sparql', data={'query': 'SELECT * WHERE {?s ?p ?o}'})
-
-# --- Apache Jena Fuseki ---
-from SPARQLWrapper import SPARQLWrapper
-sparql = SPARQLWrapper("http://localhost:3030/dataset/query")
-
-# --- GraphDB (Ontotext) ---
-from SPARQLWrapper import SPARQLWrapper
-sparql = SPARQLWrapper("http://localhost:7200/repositories/repo")
-
-# --- Titan ---
-from gremlin_python.driver import client
-gremlin_client = client.Client('ws://localhost:8182/gremlin', 'g')
-
-# --- HyperGraphDB ---
-import jpype
-jpype.startJVM(classpath=['hypergraphdb.jar'])
-
-# --- Grakn (TypeDB) ---
-from typedb.client import TypeDB
-client = TypeDB.core_client('localhost:1729')
-
-# --- TerminusDB ---
-from terminusdb_client import WOQLClient
-client = WOQLClient("http://localhost:6363")
-
-# --- FalkorDB ---
-from redis import Redis
-from redisgraph import Graph
-r = Redis(host='localhost', port=6379)
-graph = Graph('social', r)
-
-# --- Memcached (pymemcache) ---
-from pymemcache.client.base import Client
-client = Client(('localhost', 11211))
-
 # --- Ehcache ---
 import requests
 response = requests.get('http://localhost:8080/ehcache/rest/cache/key')
@@ -829,6 +869,7 @@ import coherence
 session = coherence.Session('localhost:7574')
 
 # --- GemFire ---
+# Commercial version of Apache Geode (see Key-Value Stores section). Same client.
 import gemfire
 cache = gemfire.CacheFactory().create()
 
@@ -846,8 +887,13 @@ import pika
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
 
 # --- NATS ---
+import asyncio
 import nats
-nc = nats.connect("nats://localhost:4222")
+
+async def connect_nats():
+    nc = await nats.connect("nats://localhost:4222")
+    return nc
+# nc = asyncio.run(connect_nats())
 
 # --- EventStoreDB ---
 from esdbclient import EventStoreDBClient
@@ -857,29 +903,15 @@ client = EventStoreDBClient(uri="esdb://localhost:2113?tls=false")
 import pravega_client
 stream_manager = pravega_client.StreamManager("tcp://localhost:9090")
 
-# --- Dragonfly ---
+# --- Redis-Compatible Databases (Dragonfly, KeyDB, Garnet, Redict, Valkey) ---
+# All use the standard redis-py client since they implement the Redis protocol
 import redis
-r = redis.Redis(host='localhost', port=6379)
-
-# --- KeyDB ---
-import redis
-r = redis.Redis(host='localhost', port=6379)
-
-# --- Garnet ---
-import redis
-r = redis.Redis(host='localhost', port=6379)
-
-# --- Redict ---
-import redis
-r = redis.Redis(host='localhost', port=6379)
-
-# --- Valkey ---
-import redis
-r = redis.Redis(host='localhost', port=6379)
-
-# --- DragonflyDB ---
-import redis
-r = redis.Redis(host='localhost', port=6379)
+r = redis.Redis(host='localhost', port=6379)  # Works for all Redis-compatible DBs
+# Dragonfly: default port 6379, multi-threaded Redis alternative
+# KeyDB: default port 6379, multithreaded fork of Redis
+# Garnet: default port 6379, Microsoft's Redis-compatible cache
+# Redict: default port 6379, open-source Redis fork (LGPL)
+# Valkey: default port 6379, Linux Foundation Redis fork
 
 # --- Skytable ---
 import skytable
@@ -895,7 +927,8 @@ store = zarr.DirectoryStore('data.zarr')
 
 # --- HDF5 ---
 import h5py
-f = h5py.File('data.h5', 'r')
+with h5py.File('data.h5', 'r') as f:
+    dataset = f['dataset_name']
 
 # --- Parquet ---
 import pyarrow.parquet as pq
@@ -908,7 +941,8 @@ table = orc.read_table('data.orc')
 # --- Avro ---
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
-reader = DataFileReader(open('data.avro', 'rb'), DatumReader())
+with open('data.avro', 'rb') as f:
+    reader = DataFileReader(f, DatumReader())
 
 # --- Feather ---
 import pyarrow.feather as feather
@@ -924,11 +958,12 @@ conn = duckdb.connect('database.db')
 
 # --- Polars ---
 import polars as pl
-df = pl.read_database("SELECT * FROM table", "postgresql://user:password@localhost:5432/dbname")
-
-# --- Databend Cloud ---
-import mysql.connector
-conn = mysql.connector.connect(host='tenant.databend.com', port=443, user='user', password='password', database='default')
+# read_database_uri (replaces deprecated read_database with URI string)
+df = pl.read_database_uri("SELECT * FROM table", "postgresql://user:password@localhost:5432/dbname")
+# Or with a connection object:
+# import sqlalchemy
+# engine = sqlalchemy.create_engine("postgresql://user:password@localhost:5432/dbname")
+# df = pl.read_database("SELECT * FROM table", connection=engine)
 
 # --- Firebolt ---
 from firebolt.db import connect
@@ -982,6 +1017,7 @@ from cassandra.auth import PlainTextAuthProvider
 cloud_config = {'secure_connect_bundle': '/path/to/bundle.zip'}
 auth_provider = PlainTextAuthProvider('token', 'token')
 cluster = Cluster(cloud=cloud_config, auth_provider=auth_provider)
+session = cluster.connect()
 
 # --- MongoDB Atlas ---
 from pymongo import MongoClient
@@ -1029,11 +1065,11 @@ r = redis.Redis(host='endpoint.kv.vercel-storage.com', port=6379, password='pass
 
 # --- Railway PostgreSQL ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@containers.railway.app:5432/railway")
+conn = psycopg2.connect("postgresql://user:password@containers.railway.app:5432/railway?sslmode=require")
 
 # --- Render PostgreSQL ---
 import psycopg2
-conn = psycopg2.connect("postgresql://user:password@hostname.render.com/database")
+conn = psycopg2.connect("postgresql://user:password@hostname.render.com/database?sslmode=require")
 
 # --- Fly.io PostgreSQL ---
 import psycopg2
@@ -1056,7 +1092,7 @@ engine = create_engine("mysql+mysqlconnector://user:password@localhost:3306/dbna
 engine = create_engine("sqlite:///database.db")
 
 # SQL Server
-engine = create_engine("mssql+pyodbc://user:password@localhost/dbname?driver=ODBC+Driver+17+for+SQL+Server")
+engine = create_engine("mssql+pyodbc://user:password@localhost/dbname?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes")
 
 # Oracle
-engine = create_engine("oracle+cx_oracle://user:password@localhost:1521/?service_name=service")
+engine = create_engine("oracle+oracledb://user:password@localhost:1521/?service_name=service")

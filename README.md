@@ -1,6 +1,6 @@
 # Python Database Connection Strings
 
-A comprehensive reference guide for connecting to 240+ databases using Python.
+A comprehensive reference guide for connecting to 220+ databases using Python.
 
 **Author:** Jaspal  
 **Contact:** 9891156880 | jsxtech@gmail.com
@@ -34,7 +34,9 @@ Elasticsearch, Apache Solr
 ClickHouse, Apache Druid, Apache Pinot, Apache Kudu, Kdb+
 
 ### 9. Big Data & Data Warehouses
-Apache Hive, Apache Impala, Presto/Trino, Apache Drill, Apache HBase, Apache Phoenix, Apache Accumulo, Snowflake, Databricks, Rockset, Dremio, Splice Machine
+Apache Hive, Apache Impala, Trino, Presto (legacy), Apache Drill, Apache HBase, Apache Phoenix, Apache Accumulo, Snowflake, Databricks, Dremio, Splice Machine
+
+> Note: Rockset has been discontinued (acquired by OpenAI, 2024)
 
 ### 10. Cloud Databases - AWS
 Amazon RDS (PostgreSQL/MySQL), Amazon Aurora (PostgreSQL/MySQL), Amazon Redshift, Amazon DynamoDB, Amazon DocumentDB
@@ -61,7 +63,7 @@ Objectivity/DB, Versant, GemStone/S
 Adabas, Model 204, IDMS, IMS, DATACOM, GT.M, Caché, Mnesia
 
 ### 18. Specialized & Other Databases
-VoltDB, Clustrix, Sadas, Polyglot, Apache Solr, Ehcache, Infinispan, Coherence, GemFire, Dragonfly, KeyDB, Garnet, Redict, Valkey, Skytable, DuckDB, Polars, Firebolt, Hydrolix, Tinybird, MotherDuck, Turso, Xata, Convex
+VoltDB, Clustrix, Sadas, Polyglot, Ehcache, Infinispan, Coherence, GemFire, Redis-Compatible (Dragonfly, KeyDB, Garnet, Redict, Valkey), Skytable, DuckDB, Polars, Firebolt, Hydrolix, Tinybird, MotherDuck, Turso, Xata, Convex
 
 ### 19. Data Formats & File-Based
 TileDB, Zarr, HDF5, Parquet, ORC, Avro, Feather, Arrow
@@ -95,22 +97,25 @@ The `db_connections.py` file is a **reference guide only** - not meant to be exe
 pip install psycopg2-binary          # PostgreSQL
 pip install mysql-connector-python   # MySQL
 pip install mariadb                  # MariaDB
-pip install pyodbc                   # SQL Server, Oracle (requires ODBC drivers)
-pip install cx_Oracle                # Oracle
+pip install pyodbc                   # SQL Server (requires ODBC drivers)
+pip install oracledb                 # Oracle (successor to cx_Oracle)
 pip install ibm_db                   # IBM Db2
+pip install teradatasql              # Teradata
 
 # NoSQL Databases
 pip install pymongo                  # MongoDB
 pip install redis                    # Redis
 pip install cassandra-driver         # Cassandra, ScyllaDB
 pip install couchdb                  # CouchDB
+pip install edgedb                   # EdgeDB
 
 # Graph Databases
 pip install neo4j                    # Neo4j
 pip install pydgraph                 # Dgraph
+pip install FalkorDB                 # FalkorDB (RedisGraph successor)
 
 # Vector Databases
-pip install pinecone-client          # Pinecone
+pip install pinecone                 # Pinecone (v3+)
 pip install weaviate-client          # Weaviate
 pip install pymilvus                 # Milvus
 pip install qdrant-client            # Qdrant
@@ -121,7 +126,8 @@ pip install influxdb-client          # InfluxDB
 pip install taos                     # TDengine
 
 # Big Data
-pip install pyhive                   # Hive, Presto
+pip install pyhive                   # Hive
+pip install trino                    # Trino (formerly Presto)
 pip install impyla                   # Impala
 pip install happybase                # HBase
 
@@ -137,6 +143,11 @@ pip install sqlalchemy               # SQLAlchemy
 pip install plyvel                   # LevelDB
 pip install python-rocksdb           # RocksDB
 pip install lmdb                     # LMDB
+
+# Analytical & Embedded
+pip install duckdb                   # DuckDB
+pip install snowflake-connector-python  # Snowflake
+pip install databricks-sql-connector # Databricks
 ```
 
 ## Example Usage

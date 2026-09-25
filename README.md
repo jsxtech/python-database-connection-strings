@@ -7,7 +7,7 @@ A comprehensive reference guide for connecting to 220+ databases using Python.
 
 ## Overview
 
-This repository contains connection string examples organized into 19+ categories:
+This repository contains connection string examples organized into 22 categories:
 
 ### 1. Relational Databases (SQL)
 PostgreSQL, MySQL, MariaDB, SQLite, SQL Server, Oracle, IBM Db2, SAP HANA, Teradata, Vertica, Informix, Sybase/SAP ASE, Greenplum, Netezza, Exasol, MonetDB, Firebird, InterSystems IRIS, Actian Vector, Actian Zen, Altibase, Yellowbrick, NuoDB, Raima, Empress, Valentina, OpenLink Virtuoso, FileMaker, 4D
@@ -107,6 +107,7 @@ pip install pymongo                  # MongoDB
 pip install redis                    # Redis
 pip install cassandra-driver         # Cassandra, ScyllaDB
 pip install couchdb                  # CouchDB
+pip install rethinkdb                # RethinkDB
 pip install edgedb                   # EdgeDB
 
 # Graph Databases
@@ -139,10 +140,14 @@ pip install google-cloud-firestore   # Google Firestore
 # Universal ORM
 pip install sqlalchemy               # SQLAlchemy
 
+# Managed Services
+pip install crate                    # CrateDB
+
 # Key-Value Stores
 pip install plyvel                   # LevelDB
-pip install python-rocksdb           # RocksDB
+pip install rocksdict                # RocksDB (maintained; replaces unmaintained python-rocksdb)
 pip install lmdb                     # LMDB
+pip install berkeleydb               # BerkeleyDB (replaces deprecated bsddb3, Python 3.6+)
 
 # Analytical & Embedded
 pip install duckdb                   # DuckDB

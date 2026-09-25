@@ -180,7 +180,9 @@ bucket = cluster.bucket('bucket_name')
 collection = bucket.default_collection()
 
 # --- RethinkDB ---
-import rethinkdb as r
+# Modern driver (rethinkdb 2.4+) requires instantiating a RethinkDB object first.
+from rethinkdb import RethinkDB
+r = RethinkDB()
 conn = r.connect(host='localhost', port=28015, db='dbname', user='user', password='password')
 
 # --- ArangoDB ---
@@ -349,14 +351,18 @@ client = WOQLClient("http://localhost:6363")
 # ============================================================================
 
 # --- Memcached ---
-import pymemcache.client
-client = pymemcache.client.base.Client(('localhost', 11211))
+from pymemcache.client.base import Client
+client = Client(('localhost', 11211))
 
 # --- LevelDB ---
 import plyvel
 db = plyvel.DB('database/', create_if_missing=True)
 
 # --- RocksDB ---
+# Note: 'python-rocksdb' is largely unmaintained and hard to build on modern Python.
+# The maintained alternative is 'rocksdict': pip install rocksdict
+#   from rocksdict import Rdict
+#   db = Rdict('database.db')
 import rocksdb
 db = rocksdb.DB('database.db', rocksdb.Options(create_if_missing=True))
 
@@ -365,6 +371,9 @@ import lmdb
 env = lmdb.open('database', max_dbs=10)
 
 # --- BerkeleyDB ---
+# Note: 'bsddb3' is deprecated. For Python 3.6+ use the 'berkeleydb' package instead:
+#   pip install berkeleydb
+#   from berkeleydb import db as bdb
 import bsddb3
 db = bsddb3.hashopen('database.db', 'c')
 
@@ -429,10 +438,10 @@ index = pc.Index('index_name')
 
 # --- Weaviate ---
 import weaviate
-from weaviate.auth import AuthApiKey
+from weaviate.classes.init import Auth  # v4 client
 client = weaviate.connect_to_local()  # localhost:8080
-# Or with authentication:
-# client = weaviate.connect_to_weaviate_cloud(cluster_url='https://cluster.weaviate.network', auth_credentials=AuthApiKey('api_key'))
+# Or with authentication (Weaviate Cloud):
+# client = weaviate.connect_to_weaviate_cloud(cluster_url='https://cluster.weaviate.network', auth_credentials=Auth.api_key('api_key'))
 
 # --- Milvus ---
 from pymilvus import connections
@@ -698,8 +707,8 @@ import mysql.connector
 conn = mysql.connector.connect(host='localhost', port=15306, user='user', password='password', database='dbname')
 
 # --- CrateDB ---
-import crate
-conn = crate.client.connect('localhost:4200')
+from crate import client
+conn = client.connect('localhost:4200')
 
 # --- MatrixOne ---
 import pymysql

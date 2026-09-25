@@ -338,8 +338,14 @@ import jpype
 jpype.startJVM(classpath=['hypergraphdb.jar'])
 
 # --- Grakn (TypeDB) ---
-from typedb.client import TypeDB
-client = TypeDB.core_client('localhost:1729')
+# TypeDB 3.x (current): pip install typedb-driver
+from typedb.driver import TypeDB, Credentials, DriverOptions, DriverTlsConfig
+driver = TypeDB.driver(
+    "localhost:1729",
+    Credentials("admin", "password"),
+    DriverOptions(DriverTlsConfig.disabled()),
+)
+# Legacy 2.x API (deprecated): from typedb.client import TypeDB; TypeDB.core_client('localhost:1729')
 
 # --- TerminusDB ---
 from terminusdb_client import WOQLClient
